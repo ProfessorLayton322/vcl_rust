@@ -260,11 +260,11 @@ use aligned_array::{Aligned, A16};
         }
     }
 
-    impl std::comp::PartialEq<[f32; 4]> for Vec4f {
+    impl std::cmp::PartialEq<[f32; 4]> for Vec4f {
         fn eq(&self, other: &[f32; 4]) -> bool {
             let mut arr = [0.0f32; 4];
-            other.store(arr.as_mut_ptr());
-            arr == other
+            self.store(arr.as_mut_ptr());
+            arr == *other
         }
     }
 

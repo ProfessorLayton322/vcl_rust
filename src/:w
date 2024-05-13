@@ -17,6 +17,8 @@ use std::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
 
+use aligned_array::{Aligned, A16};
+
     fn selectf(s: __m128, a: __m128, b: __m128) -> __m128 {
         #[cfg(target_feature = "sse4.1")] {
             unsafe { _mm_blendv_ps(b, a, s) }
@@ -37,9 +39,6 @@ use std::arch::x86_64::*;
     }
 
     impl Vec4f {
-
-        pub const LEN : usize = 4;
-
         pub fn from_scalar(value: f32) -> Self {
             Self {
                 xmm: unsafe { _mm_set1_ps(value) }
@@ -49,32 +48,6 @@ use std::arch::x86_64::*;
         pub fn new(a: f32, b: f32, c: f32, d: f32) -> Self {
             Self {
                 xmm: unsafe { _mm_setr_ps(a, b, c, d) }
-            }
-        }
-
-        pub fn squared(self) -> Self {
-            self * self
-        }
-
-        pub fn pow(self, mut n: i32) -> Self {
-            let return_item = Vec4f::from_scalar(1.0);
-            if n < 0 {
-                if n == i32::MIN {
-                    return nan_vec();
-                }
-                return Vec4f::from_scalar(1.0) / self.pow(-n);
-            }
-            let mut answer = Vec4f::from_scalar(1.0);
-            let mut power = self;
-            loop {
-                if (n & 1) > 0 {
-                    answer *= power;
-                }
-                n >>= 1;
-                if n == 0 {
-                    break answer;
-                }
-                power *= power;
             }
         }
 
@@ -97,43 +70,34 @@ use std::arch::x86_64::*;
             unsafe { _mm_store_ps(buffer.as_mut_ptr(), self.xmm) }
         }
 
-        pub fn store_aligned_nocache(self, buffer: &mut [f32]) {
-            if buffer.len() < 4 {
-                panic!("Buffer len not enough to store Vec128f");
+        pub fn store_nt(self, p: *mut f32) {
+            unsafe { _mm_stream_ps(p, self.xmm) }
+        }
+
+        pub fn store_partial(self, size: usize, p: *mut f32) {
+            //let mut aligned_buffer : Aligned<A16, _> = Aligned([0.0f32; 4]);
+            let mut aligned_buffer = [0.0f32; 4];
+            self.store_aligned(&mut aligned_buffer);
+            for i in 0..std::cmp::min(4, size) {
+                unsafe { *(p.add(i)) = aligned_buffer[i] }
             }
-            //checl if buffer address is divisible by 16
-            if (buffer.as_ptr() as usize) & 0xf > 0 {
-                panic!("Buffer address is not aligned by 16");
-            }
-            unsafe { _mm_stream_ps(buffer.as_mut_ptr(), self.xmm) }
         }
 
-        pub fn store_partial(self, buffer: &mut [f32]) {
-            if buffer.len() >= 4 {
-                self.store(buffer);
-                return;
-            }
-            let mut values = [0.0f32; 4];
-            self.store(&mut values);
-            buffer.copy_from_slice(&values[..buffer.len()]);
+        pub fn load(&mut self, p: *const f32) {
+            self.xmm = unsafe { _mm_loadu_ps(p) };
         }
 
-        pub fn load(&mut self, buffer: &[f32]) {
-            self.xmm = unsafe { _mm_loadu_ps(buffer.as_ptr()) };
+        pub fn load_a(&mut self, p: *const f32) {
+            self.xmm = unsafe { _mm_load_ps(p) };
         }
 
-        pub fn load_aligned(&mut self, buffer: &[f32]) {
-            self.xmm = unsafe { _mm_load_ps(buffer.as_ptr()) };
-        }
-
-        pub fn load_partial(&mut self, buffer: &[f32]) {
-            //We can use get_unchecked because we know the size of the buffer
-            match buffer.len() {
+        pub fn load_partial(&mut self, size: usize, p: *const f32) {
+            match size {
                 0 => *self = Self::default(),
-                1 => self.xmm = unsafe { _mm_load_ss(buffer.as_ptr()) },
-                2 => self.xmm = unsafe { _mm_setr_ps(*buffer.get_unchecked(0), *buffer.get_unchecked(1), 0.0, 0.0) },
-                3 => self.xmm = unsafe { _mm_setr_ps(*buffer.get_unchecked(0), *buffer.get_unchecked(1), *buffer.get_unchecked(2), 0.0) },
-                4 => self.load(buffer),
+                1 => self.xmm = unsafe { _mm_load_ss(p) },
+                2 => self.xmm = unsafe { _mm_setr_ps(*p, *(p.add(1)), 0.0, 0.0) },
+                3 => self.xmm = unsafe { _mm_setr_ps(*p, *(p.add(1)), *(p.add(2)), 0.0) },
+                4 => self.load(p),
                 _ => {},
             };
         }
@@ -153,11 +117,11 @@ use std::arch::x86_64::*;
             }
         }
 
-        pub fn get(&self, index: usize) -> f32 {
-            let mut buffer = [0.0f32; 4];
-            self.store(&mut buffer);
-            //We can use get_unchecked because we know the size of the buffer
-            unsafe { *buffer.get_unchecked(index & 3) }
+        pub fn extract(&self, index: usize) -> f32 {
+            //let mut aligned_buffer : Aligned<A16, _> = Aligned([0.0f32; 4]);
+            let mut aligned_buffer = [0.0f32; 4];
+            self.store_aligned(&mut aligned_buffer);
+            aligned_buffer[index & 3]
         }
 
         pub fn cutoff(&mut self, size: usize) {
@@ -169,6 +133,10 @@ use std::arch::x86_64::*;
             let mask : __m128 = unsafe { _mm_loadu_ps(float_mask) };
             self.xmm = unsafe { _mm_and_ps(self.xmm, mask) };
         }
+
+        pub const fn size() -> usize {
+            4
+        }
     }
 
     impl std::default::Default for Vec4f {
@@ -176,6 +144,12 @@ use std::arch::x86_64::*;
             Self::from_scalar(0.0)
         }
     }
+
+    //Indexing would not work because we can't return a reference to xmm register
+    /*
+    impl std::ops::Index<usize> for Vec4f {
+    }
+    */
 
     impl std::ops::Add for Vec4f {
         type Output = Self;
@@ -386,12 +360,36 @@ use std::arch::x86_64::*;
         }
     }
 
+    pub fn square(vec: Vec4f) -> Vec4f {
+        vec * vec
+    }
+
     fn nan_vec() -> Vec4f {
         //These are magic numbers from original Agner Fog's lib
         //https://github.com/vectorclass/version2/blob/master/instrset.h#L415
         Vec4f::from_scalar(f32::from_bits(0x7FC00000 | (0x100 & 0x003FFFFF)))
     }
 
+    pub fn pow(mut vec: Vec4f, mut n: i32) -> Vec4f {
+        let return_item = Vec4f::from_scalar(1.0);
+        if n < 0 {
+            if n == i32::MIN {
+                return nan_vec();
+            }
+            return Vec4f::from_scalar(1.0) / pow(vec, -n);
+        }
+        let mut answer = Vec4f::from_scalar(1.0);
+        loop {
+            if (n & 1) > 0 {
+                answer *= vec;
+            }
+            n >>= 1;
+            if n == 0 {
+                break answer;
+            }
+            vec *= vec;
+        }
+    }
 
     //TODO - return original value instead of NaN
     pub fn round(vec: Vec4f) -> Vec4f {

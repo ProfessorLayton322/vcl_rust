@@ -1,8 +1,17 @@
-mod vectorf128;
-mod vectorf128e;
+#[cfg(not(any(
+    target_arch = "x86",
+    target_arch = "x86_64"
+)))]
+compile_error!("This crate is only supported for x86 and x86_64 architecture");
 
+#[cfg(not(target_feature = "sse2"))]
+compile_error!("This crate requires sse2 to be compiled");
+
+mod vectorf128;
 use crate::vectorf128::vec128::*;
-use crate::vectorf128e::vec128e::*;
+
+//mod vectorf128e;
+//use crate::vectorf128e::vec128e::*;
 
 #[cfg(test)]
 mod tests {

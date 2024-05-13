@@ -8,7 +8,7 @@ compile_error!("This crate is only supported for x86 and x86_64 architecture");
 compile_error!("This crate requires sse2 to be compiled");
 
 mod vectorf128;
-use crate::vectorf128::vec128::*;
+pub use crate::vectorf128::*;
 
 //mod vectorf128e;
 //use crate::vectorf128e::vec128e::*;

@@ -15,22 +15,21 @@ compile_error!("This crate requires sse2 to be compiled");
     ),
     target_feature = "sse2"
 ))]
-mod vectorf128;
+pub mod vectorf128;
+
+//mod vectorf128e;
+//use crate::vectorf128e::vec128e::*;
+
 #[cfg(all(
     any(
         target_arch = "x86",
         target_arch = "x86_64"
     ),
-    target_feature = "sse2"
+    target_feature = "sse2",
+    test
 ))]
-pub use crate::vectorf128::*;
-
-//mod vectorf128e;
-//use crate::vectorf128e::vec128e::*;
-
-#[cfg(test)]
 mod tests {
-    use crate::*;
+    use crate::vectorf128::*;
 
     #[test]
     fn test_basic() {
@@ -90,14 +89,18 @@ mod tests {
 
         assert_eq!(Vec4f::new(-1.0, 1.0, 2.0, 3.0).squared(),
             [1.0, 1.0, 4.0, 9.0]);
-
+        
         assert_eq!(Vec4f::new(-1.0, 2.0, 3.0, 1.5).pow(2),
             [1.0, 4.0, 9.0, 1.5 * 1.5]);
+        
         assert_eq!(Vec4f::new(-1.0, 2.0, 3.0, 1.5).pow(-1),
             [-1.0, 0.5, 1.0 / 3.0, 1.0 / 1.5]);
-
+        
         assert_eq!(round(Vec4f::new(1.0, 1.4, 1.5, 1.6)),
             [1.0, 1.0, 2.0, 2.0]);
+        
+        assert_eq!(Vec4f::new(1.0, 1.5, 1.9, 2.0).truncate(),
+            [1.0, 1.0, 1.0, 2.0]);
     }
 
     fn compare_approx_vec4f(vec: &Vec4f, expected : [f32; 4]) {

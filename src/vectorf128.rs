@@ -185,6 +185,18 @@ impl Vec4f {
         //sse
         self.xmm = unsafe { _mm_and_ps(self.xmm, mask) };
     }
+
+    //TODO - return original value instead of NaN
+    pub fn truncate(&mut self) {
+        #[cfg(target_feature = "sse4.1")] {
+            //sse4.1
+            self.xmm = unsafe { _mm_round_ps(vec.xmm, 3 + 8) };
+        }
+        #[cfg(not(target_feature = "sse4.1"))] {
+            //sse2
+            self.xmm = unsafe { _mm_cvtepi32_ps(_mm_cvtps_epi32(vec.xmm)) };
+        }
+    }
 }
 
 impl std::default::Default for Vec4f {
@@ -425,22 +437,6 @@ pub fn round(vec: Vec4f) -> Vec4f {
         Vec4f {
             //sse4.1
             xmm : unsafe { _mm_round_ps(vec.xmm, 8) }
-        }
-    }
-    #[cfg(not(target_feature = "sse4.1"))] {
-        Vec4f {
-            //sse2
-            xmm : unsafe { _mm_cvtepi32_ps(_mm_cvtps_epi32(vec.xmm)) }
-        }
-    }
-}
-
-//TODO - return original value instead of NaN
-pub fn truncate(vec: Vec4f) -> Vec4f {
-    #[cfg(target_feature = "sse4.1")] {
-        Vec4f {
-            //sse4.1
-            xmm : unsafe { _mm_round_ps(vec.xmm, 3 + 8) }
         }
     }
     #[cfg(not(target_feature = "sse4.1"))] {

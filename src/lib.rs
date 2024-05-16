@@ -1,3 +1,11 @@
+//! Rust version of Agner Fog's [vectorclass lib](https://github.com/vectorclass/version2)
+//!
+//! This crate contains a struct that containts four packed `f32` values and uses SIMD instructions
+//! to work with them
+//!
+//! This crate can only be compiled on x86 or x86 architecture and a proccessor that supports at
+//! least `sse2` instruction set
+
 #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
 compile_error!("This crate is only supported for x86 and x86_64 architecture");
 
@@ -164,18 +172,19 @@ mod tests {
     #[test]
     fn test_insert_get() {
         let mut a = Vec4f::default();
-        a.insert(0, 6.0);
-        a.insert(1, 7.0);
-        a.insert(2, -2.0);
-        a.insert(3, 23.0);
+        a = a.insert(0, 6.0);
+        a = a.insert(1, 7.0);
+        a = a.insert(2, -2.0);
+        a = a.insert(3, 23.0);
         assert_eq!(a, [6.0, 7.0, -2.0, 23.0]);
-        a.insert(2, 5.0);
+        a = a.insert(2, 5.0);
         assert_eq!(a, [6.0, 7.0, 5.0, 23.0]);
 
         assert_eq!(*a.get(0).unwrap(), 6.0);
         assert_eq!(*a.get(1).unwrap(), 7.0);
         assert_eq!(*a.get(2).unwrap(), 5.0);
         assert_eq!(*a.get(3).unwrap(), 23.0);
+        assert_eq!(unsafe { *a.get_unchecked(2) }, 5.0);
         assert!(a.get(4).is_none());
 
         assert_eq!(a[0], 6.0);
@@ -187,7 +196,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "Index out of bounds")]
     fn test_insert_panic() {
-        let mut a = Vec4f::default();
+        let a = Vec4f::default();
         a.insert(4, 123.0);
     }
 
@@ -198,11 +207,15 @@ mod tests {
         a[5];
     }
 
-    fn select_aligned(buffer: &mut [f32; 5]) -> &mut [f32] {
-        if (buffer.as_ptr() as usize) % 16 == 0 {
+    //Selects aligned buffer
+    fn select_aligned(buffer: &mut [f32; 7]) -> &mut [f32] {
+        let diff = (buffer.as_ptr() as usize % 16) / 4;
+        if diff == 0 {
             return &mut buffer[..4];
         }
-        &mut buffer[1..]
+        let return_item = &mut buffer[(4 - diff)..(8 - diff)];
+        assert_eq!(return_item.as_ptr() as usize % 16, 0);
+        return_item
     }
 
     #[test]
@@ -214,8 +227,8 @@ mod tests {
 
         let some_array: [f32; 4] = [-1.0, 2.0, 3.0, -2.0];
 
-        let mut unaligned = [0.0f32; 5];
-        let mut aligned = select_aligned(&mut unaligned);
+        let mut unaligned = [0.0f32; 7];
+        let aligned = select_aligned(&mut unaligned);
         aligned.copy_from_slice(&some_array);
 
         let mut b = Vec4f::default();
@@ -256,10 +269,12 @@ mod tests {
 
         let mut d = Vec4f::new(-3.0, 2.0, 1.0, 11.0);
         d.load_partial(&too_large_array);
-        assert_eq!(d, [-3.0, 2.0, 1.0, 11.0]);
-        assert_eq!(d.cutoff(3), [-3.0, 2.0, 1.0, 0.0]);
-        assert_eq!(d.cutoff(2), [-3.0, 2.0, 0.0, 0.0]);
-        assert_eq!(d.cutoff(1), [-3.0, 0.0, 0.0, 0.0]);
-        assert_eq!(d.cutoff(0), [0.0, 0.0, 0.0, 0.0]);
+        assert_eq!(d, [0.0f32; 4]);
+
+        let e = Vec4f::new(-3.0, 2.0, 1.0, 11.0);
+        assert_eq!(e.cutoff(3), [-3.0, 2.0, 1.0, 0.0]);
+        assert_eq!(e.cutoff(2), [-3.0, 2.0, 0.0, 0.0]);
+        assert_eq!(e.cutoff(1), [-3.0, 0.0, 0.0, 0.0]);
+        assert_eq!(e.cutoff(0), [0.0, 0.0, 0.0, 0.0]);
     }
 }

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["max","min","sign_combine"],"struct":["Vec4f"]};

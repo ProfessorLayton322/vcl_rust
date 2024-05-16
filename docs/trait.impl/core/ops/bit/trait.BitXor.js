@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"vcl_rust":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.78.0/core/ops/bit/trait.BitXor.html\" title=\"trait core::ops::bit::BitXor\">BitXor</a> for <a class=\"struct\" href=\"vcl_rust/vectorf128/struct.Vec4f.html\" title=\"struct vcl_rust::vectorf128::Vec4f\">Vec4f</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

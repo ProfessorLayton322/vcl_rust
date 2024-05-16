@@ -172,10 +172,30 @@ mod tests {
         a.insert(2, 5.0);
         assert_eq!(a, [6.0, 7.0, 5.0, 23.0]);
 
-        assert_eq!(a.get(0), 6.0);
-        assert_eq!(a.get(1), 7.0);
-        assert_eq!(a.get(2), 5.0);
-        assert_eq!(a.get(3), 23.0);
+        assert_eq!(*a.get(0).unwrap(), 6.0);
+        assert_eq!(*a.get(1).unwrap(), 7.0);
+        assert_eq!(*a.get(2).unwrap(), 5.0);
+        assert_eq!(*a.get(3).unwrap(), 23.0);
+        assert!(a.get(4).is_none());
+
+        assert_eq!(a[0], 6.0);
+        assert_eq!(a[1], 7.0);
+        assert_eq!(a[2], 5.0);
+        assert_eq!(a[3], 23.0);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_insert_panic() {
+        let mut a = Vec4f::default();
+        a.insert(4, 123.0);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_index_panic() {
+        let a = Vec4f::default();
+        a[5];
     }
 
     fn select_aligned(buffer: &mut [f32; 5]) -> &mut [f32] {

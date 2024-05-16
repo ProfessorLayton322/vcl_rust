@@ -13,6 +13,8 @@ use std::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
 
+use std::option::Option;
+
 fn selectf(s: __m128, a: __m128, b: __m128) -> __m128 {
     #[cfg(target_feature = "sse4.1")]
     {
@@ -161,17 +163,20 @@ impl Vec4f {
     }
 
     pub fn insert(&mut self, index: usize, value: f32) {
+        if index > 3 {
+            panic!("Index out of bounds");
+        }
         #[cfg(target_feature = "sse4.1")]
         {
             //sse4.1
             self.xmm =
-                unsafe { _mm_insert_ps(self.xmm, _mm_set_ss(value), ((index & 3) as i32) << 4) };
+                unsafe { _mm_insert_ps(self.xmm, _mm_set_ss(value), (index as i32) << 4) };
         }
         #[cfg(not(target_feature = "sse4.1"))]
         {
             let maskl: [i32; 8] = [0, 0, 0, 0, -1, 0, 0, 0];
-            //we can use .add because 4 - index & 3 is positive
-            let float_mask: *const f32 = unsafe { maskl.as_ptr().add(4 - (index & 3)).cast() };
+            //we can use .add because 4 - index is positive
+            let float_mask: *const f32 = unsafe { maskl.as_ptr().add(4 - (index)).cast() };
             //sse
             let broad: __m128 = unsafe { _mm_set1_ps(value) };
             //sse
@@ -180,11 +185,21 @@ impl Vec4f {
         }
     }
 
-    pub fn get(&self, index: usize) -> f32 {
-        let mut buffer = [0.0f32; 4];
-        self.store(&mut buffer);
-        //We can use get_unchecked because index & 3 < 4
-        unsafe { *buffer.get_unchecked(index & 3) }
+
+    //Can only be used for index in 0..4
+    pub unsafe fn get_unchecked(&self, index: usize) -> &f32 {
+        //transmute can be used because __m128 is isinitialized and contains four floats
+        let float_pointer : *const f32 = unsafe { std::mem::transmute(&self.xmm as *const __m128) };
+        //add(index) is used accounting to index < 4
+        unsafe { &*(float_pointer.add(index)) }
+    }
+
+    pub fn get(&self, index: usize) -> Option<&f32> {
+        if index > 3 {
+            return None;
+        }
+        //We can use unsafe because we checked that index is in bounds
+        Some(unsafe { self.get_unchecked(index) })
     }
 
     pub fn cutoff(self, size: usize) -> Self {
@@ -193,7 +208,7 @@ impl Vec4f {
         }
         let maskl: [i32; 8] = [-1, -1, -1, -1, 0, 0, 0, 0];
         //we can use .add because 4 - size is positive
-        let float_mask: *const f32 = unsafe { maskl.as_ptr().add(4 - size).cast() };
+        let float_mask : *const f32 = unsafe { maskl.as_ptr().add(4 - size).cast() };
         //sse
         let mask: __m128 = unsafe { _mm_loadu_ps(float_mask) };
         //sse
@@ -468,6 +483,19 @@ impl std::cmp::PartialEq<[f32; 4]> for Vec4f {
         let mut arr = [0.0f32; 4];
         self.store(&mut arr);
         arr == *other
+    }
+}
+
+//panics if index is out of bounds
+impl std::ops::Index<usize> for Vec4f {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &f32 {
+        if index > 3 {
+            panic!("Index out of bounds");
+        }
+        //get_unchecked can be used because index is checked
+        unsafe { self.get_unchecked(index) }
     }
 }
 

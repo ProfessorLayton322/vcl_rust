@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use vcl_rust::vectorf128::*;
+use vcl_rust::Vec4f;
 
 fn add(n: u32) {
     let a = Vec4f::new(2.0, -1.0, 3.0, 4.0);

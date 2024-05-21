@@ -12,15 +12,23 @@ compile_error!("This crate is only supported for x86 and x86_64 architecture");
 #[cfg(not(target_feature = "sse2"))]
 compile_error!("This crate requires sse2 to be compiled");
 
+#[cfg(target_arch = "x86")]
+use std::arch::x86 as intrinsics;
+
+#[cfg(target_arch = "x86_64")]
+use std::arch::x86_64 as intrinsics;
+
 //Only compiled on x86/x86_64 with sse2
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     target_feature = "sse2"
 ))]
-pub mod vectorf128;
-
-//mod vectorf128e;
-//use crate::vectorf128e::vec128e::*;
+mod vectorf128;
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "sse2"
+))]
+pub use vectorf128::Vec4f;
 
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
@@ -28,7 +36,7 @@ pub mod vectorf128;
     test
 ))]
 mod tests {
-    use crate::vectorf128::*;
+    use crate::Vec4f;
 
     #[test]
     fn test_basic() {
@@ -68,8 +76,8 @@ mod tests {
 
         let first = Vec4f::new(5.0, -2.0, 3.0, 1.0);
         let second = Vec4f::new(1.0, 2.0, 2.0, 11.0);
-        assert_eq!(max(first, second), [5.0, 2.0, 3.0, 11.0]);
-        assert_eq!(min(first, second), [1.0, -2.0, 2.0, 1.0]);
+        assert_eq!(Vec4f::max(first, second), [5.0, 2.0, 3.0, 11.0]);
+        assert_eq!(Vec4f::min(first, second), [1.0, -2.0, 2.0, 1.0]);
 
         let third = Vec4f::new(-2.0, 3.0, 2.0, -1.0);
         assert_eq!(third.abs(), [2.0, 3.0, 2.0, 1.0]);
@@ -81,7 +89,7 @@ mod tests {
         );
 
         assert_eq!(
-            sign_combine(
+            Vec4f::sign_combine(
                 Vec4f::new(-2.0, -1.0, 0.0, 1.0),
                 Vec4f::new(-10.0, 0.0, -20.0, 30.0)
             ),
@@ -110,10 +118,7 @@ mod tests {
 
         assert_eq!(Vec4f::new(1.0, 1.4, 1.5, 1.6).round(), [1.0, 1.0, 2.0, 2.0]);
 
-        /*
-        assert_eq!(Vec4f::new(1.0, 1.5, 1.9, 2.0).truncate(),
-            [1.0, 1.0, 1.0, 2.0]);
-        */
+        assert_eq!(Vec4f::new(1.0, 1.5, 1.9, 2.0).truncate(), [1.0, 1.0, 1.0, 2.0]);
     }
 
     fn compare_approx_vec4f(vec: &Vec4f, expected: [f32; 4]) {

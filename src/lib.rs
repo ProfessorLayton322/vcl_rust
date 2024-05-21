@@ -3,7 +3,7 @@
 //! This crate contains a struct that containts four packed `f32` values and uses SIMD instructions
 //! to work with them
 //!
-//! This crate can only be compiled on x86 or x86 architecture and a proccessor that supports at
+//! This crate can only be compiled on `86` or `x86_64` architecture and a proccessor that supports at
 //! least `sse2` instruction set
 
 #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]

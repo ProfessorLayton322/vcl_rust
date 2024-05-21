@@ -361,7 +361,7 @@ impl Vec4f {
         #[cfg(not(target_feature = "sse4.1"))]
         {
             let maskl: [i32; 8] = [0, 0, 0, 0, -1, 0, 0, 0];
-            //we can use .add because 4 - index is positive
+            // SAFETY: we can use .add because 4 - index is positive
             let float_mask: *const f32 = unsafe { maskl.as_ptr().add(4 - index).cast() };
             // SAFETY: sse
             let broad: __m128 = unsafe { _mm_set1_ps(value) };
@@ -389,7 +389,7 @@ impl Vec4f {
     /// ```
     pub unsafe fn get_unchecked(&self, index: usize) -> &f32 {
         let float_pointer: *const f32 = &self.xmm as *const __m128 as *const f32;
-        //add(index) is used accounting to index < 4
+        // SAFETY: add(index) is used accounting to index < 4
         unsafe { float_pointer.add(index).as_ref().unwrap() }
     }
 
@@ -407,7 +407,7 @@ impl Vec4f {
         if index > 3 {
             return None;
         }
-        //We can use unsafe because we checked that index is in bounds
+        // SAFETY: We can use unchecked because we checked that index is in bounds
         Some(unsafe { self.get_unchecked(index) })
     }
 
@@ -426,7 +426,7 @@ impl Vec4f {
             return self;
         }
         let maskl: [i32; 8] = [-1, -1, -1, -1, 0, 0, 0, 0];
-        //we can use .add because 4 - size is positive
+        // SAFETY: we can use .add because 4 - size is positive
         let float_mask: *const f32 = unsafe { maskl.as_ptr().add(4 - size).cast() };
         // SAFETY: sse
         let mask: __m128 = unsafe { _mm_loadu_ps(float_mask) };
@@ -727,6 +727,10 @@ impl std::convert::From<[f32; 4]> for Vec4f {
 }
 
 /// Constructs vector from slice 
+///
+/// # Panics
+///
+/// Panics if slice size is less than `4`
 ///
 /// # Examples
 ///
@@ -1125,7 +1129,7 @@ impl std::ops::Index<usize> for Vec4f {
         if index > 3 {
             panic!("Index out of bounds");
         }
-        //get_unchecked can be used because index is checked
+        // SAFETY: Get_unchecked can be used because index is checked
         unsafe { self.get_unchecked(index) }
     }
 }
@@ -1138,6 +1142,7 @@ impl std::ops::Index<usize> for Vec4f {
 /// use vcl_rust::Vec4f;
 ///
 /// let vec = Vec4f::new(1.0, 2.0, 3.0, 4.0);
+/// println!("{:?}", vec);
 /// ```
 impl std::fmt::Debug for Vec4f {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

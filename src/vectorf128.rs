@@ -706,6 +706,49 @@ impl Vec4f {
     }
 }
 
+
+/// Constructs vector from array
+///
+/// # Examples
+///
+/// ```
+/// use vcl_rust::Vec4f;
+///
+/// let vec = Vec4f::from([1.0, 2.0, 3.0, 4.0]);
+/// assert_eq!(vec, [1.0, 2.0, 3.0, 4.0]);
+/// ```
+impl std::convert::From<[f32; 4]> for Vec4f {
+    fn from(value: [f32; 4]) -> Self {
+        Self {
+            // SAFETY: sse
+            xmm: unsafe { _mm_loadu_ps(value.as_ptr()) },
+        }
+    }
+}
+
+/// Constructs vector from slice 
+///
+/// # Examples
+///
+/// ```
+/// use vcl_rust::Vec4f;
+///
+/// let arr = vec![-1.0, 2.0, 3.0, 1.5];
+/// let vec = Vec4f::from(arr.as_slice());
+/// assert_eq!(vec, [-1.0, 2.0, 3.0, 1.5]);
+/// ```
+impl std::convert::From<&[f32]> for Vec4f {
+    fn from(value: &[f32]) -> Self {
+        if value.len() < 4 {
+            panic!("Slice size is not enough to construct a vector");
+        }
+        Self {
+            // SAFETY: sse
+            xmm: unsafe { _mm_loadu_ps(value.as_ptr()) },
+        }
+    }
+}
+
 /// Creates vector initialized with `0.0` values
 ///
 /// # Examples
@@ -1023,6 +1066,28 @@ impl std::ops::BitXorAssign for Vec4f {
     }
 }
 
+/// Comparison
+///
+/// # Examples
+///
+/// ```
+/// use vcl_rust::Vec4f;
+///
+/// let a = Vec4f::new(2.0, 4.0, 12.0, -1.0);
+/// let b = Vec4f::new(2.0, 4.0, 12.0, -1.0);
+/// assert_eq!(a, b);
+///
+/// let c = Vec4f::new(-1.0, 2.0, 2.5, 3.0);
+/// assert_ne!(a, c);
+/// ```
+impl std::cmp::PartialEq for Vec4f {
+    fn eq(&self, other: &Self) -> bool {
+        // SAFETY: sse
+        let comparison : i32 = unsafe { _mm_movemask_ps(_mm_cmpeq_ps(self.xmm, other.xmm)) };
+        comparison == 0x0Fi32
+    }
+}
+
 /// Operator ==, compares vector to [f32; 4]
 ///
 /// # Examples
@@ -1035,9 +1100,7 @@ impl std::ops::BitXorAssign for Vec4f {
 /// ```
 impl std::cmp::PartialEq<[f32; 4]> for Vec4f {
     fn eq(&self, other: &[f32; 4]) -> bool {
-        let mut arr = [0.0f32; 4];
-        self.store(&mut arr);
-        arr == *other
+        self.eq(&Vec4f::from(other as &[f32]))
     }
 }
 
@@ -1068,6 +1131,14 @@ impl std::ops::Index<usize> for Vec4f {
 }
 
 /// Reinterprets vector as `[f32; 4]` and formats it as a debug string
+///
+/// # Examples
+///
+/// ```
+/// use vcl_rust::Vec4f;
+///
+/// let vec = Vec4f::new(1.0, 2.0, 3.0, 4.0);
+/// ```
 impl std::fmt::Debug for Vec4f {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut arr = [0.0f32; 4];

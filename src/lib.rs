@@ -51,6 +51,13 @@ mod tests {
         let mut d = Vec4f::default();
         d.load(&arr);
         assert_eq!(d, [-2.0, 1.0, 3.0, -4.0]);
+
+        let e = Vec4f::new(2.0, 4.0, 12.0, -1.0);
+        let f = Vec4f::new(2.0, 4.0, 12.0, -1.0);
+        assert_eq!(e, f);
+
+        let g = Vec4f::new(-1.0, 2.0, 2.5, 3.0);
+        assert_ne!(e, g);
     }
 
     #[test]

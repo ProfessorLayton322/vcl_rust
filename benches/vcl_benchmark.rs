@@ -36,7 +36,7 @@ fn sqrt(data: &mut [Vec4f]) {
     data.iter_mut().for_each(|vec| *vec = vec.sqrt());
 }
 
-fn horizontal(data: &[Vec4f], ) -> f32 {
+fn horizontal(data: &[Vec4f]) -> f32 {
     data.iter().map(|vec| vec.horizontal_add()).sum()
 }
 
@@ -48,7 +48,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     let data = vec![Vec4f::new(1.0, 2.0, 3.0, 4.0); 10];
     c.bench_function("pow 10", |b| b.iter(|| pow(black_box(&mut data.clone()))));
     c.bench_function("sqrt 10", |b| b.iter(|| sqrt(black_box(&mut data.clone()))));
-    c.bench_function("horizontal 10", |b| b.iter(|| horizontal(black_box(&data.clone()))));
+    c.bench_function("horizontal 10", |b| {
+        b.iter(|| horizontal(black_box(&data.clone())))
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);

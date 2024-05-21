@@ -79,8 +79,8 @@ impl Vec4f {
     }
 
     fn nan_vec() -> Vec4f {
-        //These are magic numbers from original Agner Fog's lib
-        //https://github.com/vectorclass/version2/blob/master/instrset.h#L415
+        // These are magic numbers from original Agner Fog's lib
+        // https://github.com/vectorclass/version2/blob/master/instrset.h#L415
         Vec4f::from_scalar(f32::from_bits(0x7FC00000 | (0x100 & 0x003FFFFF)))
     }
 
@@ -115,7 +115,6 @@ impl Vec4f {
         }
     }
 
-    //TODO unchecked options without panic
     /// Copies values of the vector to a mutable slice
     ///
     /// # Panics
@@ -167,7 +166,7 @@ impl Vec4f {
         if buffer.len() < 4 {
             panic!("Buffer len not enough to store Vec128f");
         }
-        //check if buffer address is divisible by 16
+        // check if buffer address is divisible by 16
         if (buffer.as_ptr() as usize) & 0xf > 0 {
             panic!("Buffer address is not aligned by 16");
         }
@@ -202,7 +201,7 @@ impl Vec4f {
         if buffer.len() < 4 {
             panic!("Buffer len not enough to store Vec128f");
         }
-        //check if buffer address is divisible by 16
+        // check if buffer address is divisible by 16
         if (buffer.as_ptr() as usize) & 0xf > 0 {
             panic!("Buffer address is not aligned by 16");
         }
@@ -282,7 +281,7 @@ impl Vec4f {
         if buffer.len() < 4 {
             panic!("Buffer len not enough to store Vec128f");
         }
-        //check if buffer address is divisible by 16
+        // check if buffer address is divisible by 16
         if (buffer.as_ptr() as usize) & 0xf > 0 {
             panic!("Buffer address is not aligned by 16");
         }
@@ -304,7 +303,7 @@ impl Vec4f {
     /// assert_eq!(d, [-2.0, 1.0, 0.0, 0.0]);
     /// ```
     pub fn load_partial(&mut self, buffer: &[f32]) {
-        //We can use get_unchecked because we know the size of the buffer
+        // We can use get_unchecked because we know the size of the buffer
         match buffer.len() {
             0 => *self = Self::default(),
             // SAFETY: sse
@@ -447,16 +446,18 @@ impl Vec4f {
     /// assert_eq!(vec.truncate(), [1.0, 1.0, 1.0, 2.0]);
     /// ```
     pub fn truncate(self) -> Self {
-        #[cfg(target_feature = "sse4.1")] {
+        #[cfg(target_feature = "sse4.1")]
+        {
             // SAFETY: sse4.1
             Self {
-                xmm : unsafe { _mm_round_ps(self.xmm, 3 + 8) },
+                xmm: unsafe { _mm_round_ps(self.xmm, 3 + 8) },
             }
         }
-        #[cfg(not(target_feature = "sse4.1"))] {
+        #[cfg(not(target_feature = "sse4.1"))]
+        {
             // SAFETY: sse2
             Self {
-                xmm : unsafe { _mm_cvtepi32_ps(_mm_cvttps_epi32(self.xmm)) },
+                xmm: unsafe { _mm_cvtepi32_ps(_mm_cvttps_epi32(self.xmm)) },
             }
         }
     }
@@ -706,7 +707,6 @@ impl Vec4f {
     }
 }
 
-
 /// Constructs vector from array
 ///
 /// # Examples
@@ -726,7 +726,7 @@ impl core::convert::From<[f32; 4]> for Vec4f {
     }
 }
 
-/// Constructs vector from slice 
+/// Constructs vector from slice
 ///
 /// # Panics
 ///
@@ -1087,7 +1087,7 @@ impl core::ops::BitXorAssign for Vec4f {
 impl core::cmp::PartialEq for Vec4f {
     fn eq(&self, other: &Self) -> bool {
         // SAFETY: sse
-        let comparison : i32 = unsafe { _mm_movemask_ps(_mm_cmpeq_ps(self.xmm, other.xmm)) };
+        let comparison: i32 = unsafe { _mm_movemask_ps(_mm_cmpeq_ps(self.xmm, other.xmm)) };
         comparison == 0x0Fi32
     }
 }

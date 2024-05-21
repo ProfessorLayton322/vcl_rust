@@ -129,7 +129,10 @@ mod tests {
 
         assert_eq!(Vec4f::new(1.0, 1.4, 1.5, 1.6).round(), [1.0, 1.0, 2.0, 2.0]);
 
-        assert_eq!(Vec4f::new(1.0, 1.5, 1.9, 2.0).truncate(), [1.0, 1.0, 1.0, 2.0]);
+        assert_eq!(
+            Vec4f::new(1.0, 1.5, 1.9, 2.0).truncate(),
+            [1.0, 1.0, 1.0, 2.0]
+        );
     }
 
     fn compare_approx_vec4f(vec: &Vec4f, expected: [f32; 4]) {

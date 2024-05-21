@@ -5,7 +5,7 @@
 
 use crate::intrinsics::*;
 
-use std::option::Option;
+use core::option::Option;
 
 fn selectf(s: __m128, a: __m128, b: __m128) -> __m128 {
     #[cfg(target_feature = "sse4.1")]
@@ -717,7 +717,7 @@ impl Vec4f {
 /// let vec = Vec4f::from([1.0, 2.0, 3.0, 4.0]);
 /// assert_eq!(vec, [1.0, 2.0, 3.0, 4.0]);
 /// ```
-impl std::convert::From<[f32; 4]> for Vec4f {
+impl core::convert::From<[f32; 4]> for Vec4f {
     fn from(value: [f32; 4]) -> Self {
         Self {
             // SAFETY: sse
@@ -741,7 +741,7 @@ impl std::convert::From<[f32; 4]> for Vec4f {
 /// let vec = Vec4f::from(arr.as_slice());
 /// assert_eq!(vec, [-1.0, 2.0, 3.0, 1.5]);
 /// ```
-impl std::convert::From<&[f32]> for Vec4f {
+impl core::convert::From<&[f32]> for Vec4f {
     fn from(value: &[f32]) -> Self {
         if value.len() < 4 {
             panic!("Slice size is not enough to construct a vector");
@@ -763,7 +763,7 @@ impl std::convert::From<&[f32]> for Vec4f {
 /// let vec = Vec4f::default();
 /// assert_eq!(vec, [0.0f32; 4]);
 /// ```
-impl std::default::Default for Vec4f {
+impl core::default::Default for Vec4f {
     fn default() -> Self {
         Self::from_scalar(0.0)
     }
@@ -780,7 +780,7 @@ impl std::default::Default for Vec4f {
 /// let b = Vec4f::new(1.0, 2.0, 3.0, 4.0);
 /// assert_eq!(a * b, [1.0, 4.0, 9.0, 16.0]);
 /// ```
-impl std::ops::Add for Vec4f {
+impl core::ops::Add for Vec4f {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -802,7 +802,7 @@ impl std::ops::Add for Vec4f {
 /// a += Vec4f::new(-1.0, 2.0, 0.5, -3.0);
 /// assert_eq!(a, [0.0, 5.0, 2.5, -5.0]);
 /// ```
-impl std::ops::AddAssign for Vec4f {
+impl core::ops::AddAssign for Vec4f {
     fn add_assign(&mut self, other: Self) {
         // SAFETY: sse
         self.xmm = unsafe { _mm_add_ps(self.xmm, other.xmm) }
@@ -820,7 +820,7 @@ impl std::ops::AddAssign for Vec4f {
 /// let b = Vec4f::new(2.0, 1.0, 4.0, 5.0);
 /// assert_eq!(a - b, [-1.0, 1.0, -1.0, -1.0]);
 /// ```
-impl std::ops::Sub for Vec4f {
+impl core::ops::Sub for Vec4f {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
@@ -842,7 +842,7 @@ impl std::ops::Sub for Vec4f {
 /// a -= Vec4f::new(-1.0, 2.0, 0.5, -3.0);
 /// assert_eq!(a, [2.0, 1.0, 1.5, 1.0]);
 /// ```
-impl std::ops::SubAssign for Vec4f {
+impl core::ops::SubAssign for Vec4f {
     fn sub_assign(&mut self, other: Self) {
         // SAFETY: sse
         self.xmm = unsafe { _mm_sub_ps(self.xmm, other.xmm) }
@@ -859,7 +859,7 @@ impl std::ops::SubAssign for Vec4f {
 /// let a = Vec4f::from_scalar(2.0);
 /// assert_eq!(-a, [-2.0f32; 4]);
 /// ```
-impl std::ops::Neg for Vec4f {
+impl core::ops::Neg for Vec4f {
     type Output = Self;
 
     fn neg(self) -> Self {
@@ -881,7 +881,7 @@ impl std::ops::Neg for Vec4f {
 /// let b = Vec4f::new(2.0, 1.0, 4.0, 5.0);
 /// assert_eq!(a * b, [2.0, 2.0, 12.0, 20.0]);
 /// ```
-impl std::ops::Mul for Vec4f {
+impl core::ops::Mul for Vec4f {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self {
@@ -903,7 +903,7 @@ impl std::ops::Mul for Vec4f {
 /// a *= Vec4f::new(-1.0, 2.0, 0.5, -3.0);
 /// assert_eq!(a, [-1.0, 6.0, 1.0, 6.0]);
 /// ```
-impl std::ops::MulAssign for Vec4f {
+impl core::ops::MulAssign for Vec4f {
     fn mul_assign(&mut self, other: Self) {
         // SAFETY: sse
         self.xmm = unsafe { _mm_mul_ps(self.xmm, other.xmm) }
@@ -921,7 +921,7 @@ impl std::ops::MulAssign for Vec4f {
 /// let b = Vec4f::new(-1.0, 2.0, -2.0, -3.0);
 /// assert_eq!(a / b, [-3.0, 1.0, -5.0, 1.0]);
 /// ```
-impl std::ops::Div for Vec4f {
+impl core::ops::Div for Vec4f {
     type Output = Self;
 
     fn div(self, other: Self) -> Self {
@@ -943,7 +943,7 @@ impl std::ops::Div for Vec4f {
 /// a /= Vec4f::new(-1.0, 2.0, -2.0, -3.0);
 /// assert_eq!(a, [-3.0, 1.0, -5.0, 1.0]);
 /// ```
-impl std::ops::DivAssign for Vec4f {
+impl core::ops::DivAssign for Vec4f {
     fn div_assign(&mut self, other: Self) {
         // SAFETY: sse
         self.xmm = unsafe { _mm_div_ps(self.xmm, other.xmm) }
@@ -961,7 +961,7 @@ impl std::ops::DivAssign for Vec4f {
 /// let b = Vec4f::new(3.0, 6.0, 8.0, 3.0);
 /// assert_eq!(a & b, [2.0, 4.0, 8.0, 0.0]);
 /// ```
-impl std::ops::BitAnd for Vec4f {
+impl core::ops::BitAnd for Vec4f {
     type Output = Self;
 
     fn bitand(self, other: Self) -> Self {
@@ -983,7 +983,7 @@ impl std::ops::BitAnd for Vec4f {
 /// a &= Vec4f::new(3.0, 6.0, 8.0, 3.0);
 /// assert_eq!(a, [2.0, 4.0, 8.0, 0.0]);
 /// ```
-impl std::ops::BitAndAssign for Vec4f {
+impl core::ops::BitAndAssign for Vec4f {
     fn bitand_assign(&mut self, other: Self) {
         // SAFETY: sse
         self.xmm = unsafe { _mm_and_ps(self.xmm, other.xmm) }
@@ -1001,7 +1001,7 @@ impl std::ops::BitAndAssign for Vec4f {
 /// let b = Vec4f::new(3.0, 2.0, 4.0, 2.0);
 /// assert_eq!(a | b, [3.0, 4.0, 16.0, 3.0]);
 /// ```
-impl std::ops::BitOr for Vec4f {
+impl core::ops::BitOr for Vec4f {
     type Output = Self;
 
     fn bitor(self, other: Self) -> Self {
@@ -1023,7 +1023,7 @@ impl std::ops::BitOr for Vec4f {
 /// a |= Vec4f::new(3.0, 2.0, 4.0, 2.0);
 /// assert_eq!(a, [3.0, 4.0, 16.0, 3.0]);
 /// ```
-impl std::ops::BitOrAssign for Vec4f {
+impl core::ops::BitOrAssign for Vec4f {
     fn bitor_assign(&mut self, other: Self) {
         // SAFETY: sse
         self.xmm = unsafe { _mm_or_ps(self.xmm, other.xmm) }
@@ -1041,7 +1041,7 @@ impl std::ops::BitOrAssign for Vec4f {
 /// let b = Vec4f::new(2.0, 4.0, 8.0, 3.0);
 /// assert_eq!(a ^ b, [0.0, 0.0, 0.0, 0.0]);
 /// ```
-impl std::ops::BitXor for Vec4f {
+impl core::ops::BitXor for Vec4f {
     type Output = Self;
 
     fn bitxor(self, other: Self) -> Self {
@@ -1063,7 +1063,7 @@ impl std::ops::BitXor for Vec4f {
 /// a ^= Vec4f::new(2.0, 4.0, 12.0, -1.0);
 /// assert_eq!(a, [0.0f32; 4]);
 /// ```
-impl std::ops::BitXorAssign for Vec4f {
+impl core::ops::BitXorAssign for Vec4f {
     fn bitxor_assign(&mut self, other: Self) {
         // SAFETY: sse
         self.xmm = unsafe { _mm_xor_ps(self.xmm, other.xmm) }
@@ -1084,7 +1084,7 @@ impl std::ops::BitXorAssign for Vec4f {
 /// let c = Vec4f::new(-1.0, 2.0, 2.5, 3.0);
 /// assert_ne!(a, c);
 /// ```
-impl std::cmp::PartialEq for Vec4f {
+impl core::cmp::PartialEq for Vec4f {
     fn eq(&self, other: &Self) -> bool {
         // SAFETY: sse
         let comparison : i32 = unsafe { _mm_movemask_ps(_mm_cmpeq_ps(self.xmm, other.xmm)) };
@@ -1102,7 +1102,7 @@ impl std::cmp::PartialEq for Vec4f {
 /// let vec = Vec4f::new(1.0, 2.0, 3.0, 4.0);
 /// assert_eq!(vec, [1.0, 2.0, 3.0, 4.0]);
 /// ```
-impl std::cmp::PartialEq<[f32; 4]> for Vec4f {
+impl core::cmp::PartialEq<[f32; 4]> for Vec4f {
     fn eq(&self, other: &[f32; 4]) -> bool {
         self.eq(&Vec4f::from(other as &[f32]))
     }
@@ -1122,7 +1122,7 @@ impl std::cmp::PartialEq<[f32; 4]> for Vec4f {
 /// let vec = Vec4f::new(1.0, 2.0, 3.0, 4.0);
 /// assert_eq!(vec[2], 3.0);
 /// ```
-impl std::ops::Index<usize> for Vec4f {
+impl core::ops::Index<usize> for Vec4f {
     type Output = f32;
 
     fn index(&self, index: usize) -> &f32 {
@@ -1144,8 +1144,8 @@ impl std::ops::Index<usize> for Vec4f {
 /// let vec = Vec4f::new(1.0, 2.0, 3.0, 4.0);
 /// println!("{:?}", vec);
 /// ```
-impl std::fmt::Debug for Vec4f {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Vec4f {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut arr = [0.0f32; 4];
         self.store(&mut arr);
         arr.fmt(f)

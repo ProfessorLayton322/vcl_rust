@@ -5,6 +5,10 @@
 //!
 //! This crate can only be compiled on `86` or `x86_64` architecture and a proccessor that supports at
 //! least `sse2` instruction set
+//!
+//! This crate also has `no_std` attribute
+
+#![no_std]
 
 #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
 compile_error!("This crate is only supported for x86 and x86_64 architecture");
@@ -13,10 +17,10 @@ compile_error!("This crate is only supported for x86 and x86_64 architecture");
 compile_error!("This crate requires sse2 to be compiled");
 
 #[cfg(target_arch = "x86")]
-use std::arch::x86 as intrinsics;
+use core::arch::x86 as intrinsics;
 
 #[cfg(target_arch = "x86_64")]
-use std::arch::x86_64 as intrinsics;
+use core::arch::x86_64 as intrinsics;
 
 //Only compiled on x86/x86_64 with sse2
 #[cfg(all(

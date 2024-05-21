@@ -21,7 +21,7 @@ fn selectf(s: __m128, a: __m128, b: __m128) -> __m128 {
 }
 
 /// Packed array of four `f32` values that can be used for SIMD operations
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Copy)]
 pub struct Vec4f {
     xmm: __m128,
 }
@@ -1064,5 +1064,14 @@ impl std::ops::Index<usize> for Vec4f {
         }
         //get_unchecked can be used because index is checked
         unsafe { self.get_unchecked(index) }
+    }
+}
+
+/// Reinterprets vector as `[f32; 4]` and formats it as a debug string
+impl std::fmt::Debug for Vec4f {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut arr = [0.0f32; 4];
+        self.store(&mut arr);
+        arr.fmt(f)
     }
 }
